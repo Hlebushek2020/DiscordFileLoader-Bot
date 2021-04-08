@@ -82,6 +82,10 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Windows\DownloadSettingsWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Windows\AddScriptItemWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -95,6 +99,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Compile Include="Classes\Downloader.cs" />
+    <Compile Include="Structures\DownloadSettings.cs" />
+    <Compile Include="Windows\DownloadSettingsWindow.xaml.cs">
+      <DependentUpon>DownloadSettingsWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Enums\BotClientCommands.cs" />
     <Compile Include="Windows\AddScriptItemWindow.xaml.cs">
       <DependentUpon>AddScriptItemWindow.xaml</DependentUpon>

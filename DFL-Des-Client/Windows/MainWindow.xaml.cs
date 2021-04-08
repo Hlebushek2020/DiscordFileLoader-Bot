@@ -1,25 +1,17 @@
 ﻿using DFL_Des_Client.Classes;
 using DFL_Des_Client.Classes.Models;
 using DFL_Des_Client.Enums;
+using DFL_Des_Client.Structures;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 
 namespace DFL_Des_Client
 {
@@ -116,11 +108,13 @@ namespace DFL_Des_Client
                                 int count = binaryReader.ReadInt32();
                                 for (int i = 0; i < count; i++)
                                 {
-                                    ScriptItem scriptItem = new ScriptItem();
-                                    scriptItem.ChannelName = binaryReader.ReadString();
-                                    scriptItem.Command = (GetUrlCommand)binaryReader.ReadByte();
-                                    scriptItem.Count = binaryReader.ReadInt32();
-                                    scriptItem.MessageId = binaryReader.ReadUInt64();
+                                    ScriptItem scriptItem = new ScriptItem
+                                    {
+                                        ChannelName = binaryReader.ReadString(),
+                                        Command = (GetUrlCommand)binaryReader.ReadByte(),
+                                        Count = binaryReader.ReadInt32(),
+                                        MessageId = binaryReader.ReadUInt64()
+                                    };
 
                                     script.Add(scriptItem);
                                 }
@@ -134,10 +128,13 @@ namespace DFL_Des_Client
         #region GetAttacments
         private void Button_GetAttacments_Click(object sender, RoutedEventArgs e)
         {
-            if (MessageBox.Show("Очистить текущий список?", App.ProgramName, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
-                urls.Clear();
+            if (script.Count > 0)
+            {
+                if (MessageBox.Show("Очистить текущий список?", App.ProgramName, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                    urls.Clear();
 
-            Task.Run(() => GetAttacments());
+                Task.Run(() => GetAttacments());
+            }
         }
 
         private void GetAttacments()
@@ -346,17 +343,13 @@ namespace DFL_Des_Client
         #region Download
         private void Button_Download_Click(object sender, RoutedEventArgs e)
         {
-            using (System.Windows.Forms.FolderBrowserDialog folderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog
-            {
-                SelectedPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
-            })
-            {
-                if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                    Task.Run(() => Download(folderBrowserDialog.SelectedPath));
-            }
+            DownloadSettingsWindow downloadSettingsWindow = new DownloadSettingsWindow();
+            downloadSettingsWindow.ShowDialog();
+            if (downloadSettingsWindow.DownloadSettings != null)
+                Task.Run(() => Download(downloadSettingsWindow.DownloadSettings.Value));
         }
 
-        private void Download(string path)
+        private void Download(DownloadSettings settings)
         {
             try
             {
@@ -380,7 +373,7 @@ namespace DFL_Des_Client
 
                 foreach (string url in urls)
                 {
-                    downloader.StartNew(() => DownloadFile(url, path));
+                    downloader.StartNew(() => DownloadFile(url, settings.Folder));
                     Dispatcher.Invoke(() =>
                     {
                         progressBar_Progress1.Value++;
@@ -400,6 +393,22 @@ namespace DFL_Des_Client
                     grid_Progress.Visibility = Visibility.Hidden;
                 });
             }
+
+            if (settings.OpenInIce)
+            {
+                string arguments = $"\"{settings.Folder}\"";
+
+                if (settings.SearchCollections)
+                    arguments += " -oc";
+
+                using (Process ice = new Process())
+                {
+                    ice.StartInfo.FileName = App.Settings.ImageCollectionEditor;
+                    ice.StartInfo.Arguments = arguments;
+                    ice.Start();
+                }
+            }
+            
         }
 
         private void DownloadFile(string url, string path)

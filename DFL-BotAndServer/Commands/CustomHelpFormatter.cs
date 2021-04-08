@@ -28,19 +28,17 @@ namespace DFL_BotAndServer.Commands
 
         public override BaseHelpFormatter WithCommand(Command command)
         {
-            if (!command.Name.Equals("kill"))
-                embed.AddField(command.Name, command.Description);
+            embed.AddField(command.Name, command.Description);
             return this;
         }
 
         public override BaseHelpFormatter WithSubcommands(IEnumerable<Command> subcommands)
         {
             foreach (var cmd in subcommands)
-                if (!cmd.Name.Equals("kill"))
-                    if (string.IsNullOrEmpty(cmd.Description))
-                        embed.AddField(cmd.Name, "empty");
-                    else
-                        embed.AddField(cmd.Name, cmd.Description);
+                if (string.IsNullOrEmpty(cmd.Description))
+                    embed.AddField(cmd.Name, "empty");
+                else
+                    embed.AddField(cmd.Name, cmd.Description);
             return this;
         }
     }

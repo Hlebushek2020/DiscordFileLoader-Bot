@@ -11,13 +11,6 @@
         FontSize="14"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanMinimize">
-    <Window.Resources>
-        <Style x:Key="ButtonStyle" TargetType="Button">
-            <Setter Property="HorizontalAlignment" Value="Right"/>
-            <Setter Property="VerticalAlignment" Value="Bottom"/>
-            <Setter Property="Height" Value="30"/>
-        </Style>
-    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -33,7 +26,7 @@
         <TextBox x:Name="textBox_MessageId" Grid.Row="2" Height="23" Margin="10,24,10,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
         <TextBlock x:Name="textBlock_Count" Grid.Row="2" FontWeight="Medium" HorizontalAlignment="Left" Margin="10,52,0,0" TextWrapping="Wrap" Text="Количество:" VerticalAlignment="Top"/>
         <TextBox x:Name="textBox_Count" Grid.Row="2" Height="23" Margin="10,76,10,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
-        <Button Grid.Row="2" Content="Закрыть" Margin="0,0,10,10" Width="80" Style="{StaticResource ButtonStyle}" Click="Button_Close_Click"/>
-        <Button Grid.Row="2" Content="Сохранить" Margin="0,0,95,10" Width="100" Style="{StaticResource ButtonStyle}" Click="Button_Apply_Click"/>
+        <Button Grid.Row="2" Content="Закрыть" Margin="0,0,10,10" Width="80" Style="{StaticResource ButtonDownMenuStyle}" Click="Button_Close_Click"/>
+        <Button Grid.Row="2" Content="Сохранить" Margin="0,0,95,10" Width="100" Style="{StaticResource ButtonDownMenuStyle}" Click="Button_Apply_Click"/>
     </Grid>
 </Window>

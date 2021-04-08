@@ -114,6 +114,7 @@ namespace DFL_Des_Client
             else
             {
                 App.Settings.Host = textBox_Host.Text;
+                App.Settings.ImageCollectionEditor = textBox_ImageCollectionEditor.Text;
                 App.Settings.Port = int.Parse(textBox_Port.Text);
                 App.Settings.UserId = ulong.Parse(textBox_UserId.Text);
                 App.Settings.DiscordServerId = ulong.Parse(textBox_DiscordServerId.Text);
@@ -260,6 +261,19 @@ namespace DFL_Des_Client
                     listView_ChannelIds.Items.Refresh();
                 });
 
+            }
+        }
+
+        private void Button_SelectImageCollectionEditorExe_Click(object sender, RoutedEventArgs e)
+        {
+            using (System.Windows.Forms.OpenFileDialog openFileDialog = new System.Windows.Forms.OpenFileDialog
+            {
+                Filter = "*.exe|*.exe",
+                DefaultExt = "exe"
+            })
+            {
+                if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                    textBox_ImageCollectionEditor.Text = openFileDialog.FileName;
             }
         }
     }

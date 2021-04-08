@@ -13,7 +13,7 @@ namespace DFL_BotAndServer
             
             Console.SetOut(new MultiLog(Console.Out));
 
-            using (YukoBot yukoBot = new YukoBot(Settings.GetInstance()))
+            using (YukoBot yukoBot = YukoBot.GetInstance())
                 yukoBot.RunAsync().GetAwaiter().GetResult();
         }
     }

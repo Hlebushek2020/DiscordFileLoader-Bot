@@ -1,12 +1,7 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.NetworkInformation;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace DFL_BotAndServer.Commands
@@ -67,20 +62,6 @@ namespace DFL_BotAndServer.Commands
                 .WithDescription(Assembly.GetExecutingAssembly().GetName().Version.ToString());
 
             await commandContext.RespondAsync(embed: discordEmbed.Build());
-        }
-
-        [Command("kill")]
-        public async Task Kill(CommandContext commandContext)
-        {
-            Settings settings = Settings.GetInstance();
-
-            if (!commandContext.User.Id.Equals(settings.AdminId))
-                await commandContext.RespondAsync("Ай-яй-яй! Нельзя!");
-            else
-            {
-                await commandContext.RespondAsync("Ok");
-                Environment.Exit(0);
-            }
         }
 
     }

@@ -10,19 +10,12 @@
         FontSize="14"
         ResizeMode="CanMinimize"
         WindowStartupLocation="CenterScreen">
-    <Window.Resources>
-        <Style x:Key="ButtonStyle" TargetType="Button">
-            <Setter Property="HorizontalAlignment" Value="Right"/>
-            <Setter Property="VerticalAlignment" Value="Top"/>
-            <Setter Property="Height" Value="30"/>
-        </Style>
-    </Window.Resources>
     <Grid>
         <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Название:" VerticalAlignment="Top"/>
         <TextBox x:Name="textBox_Name" Height="23" Margin="10,34,10,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
         <TextBlock HorizontalAlignment="Left" Margin="10,62,0,0" TextWrapping="Wrap" Text="Id" VerticalAlignment="Top"/>
         <TextBox x:Name="textBox_ChannelId" Height="23" Margin="10,86,10,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
-        <Button Content="Закрыть" Margin="0,114,10,0" Width="80" Style="{StaticResource ButtonStyle}" Click="Button_Close_Click"/>
-        <Button Content="Сохранить" Margin="0,114,95,0" Width="100" Style="{StaticResource ButtonStyle}" Click="Button_Apply_Click"/>
+        <Button Content="Закрыть" Margin="0,0,10,10" Width="80" Style="{StaticResource ButtonDownMenuStyle}" Click="Button_Close_Click"/>
+        <Button Content="Сохранить" Margin="0,0,95,10" Width="100" Style="{StaticResource ButtonDownMenuStyle}" Click="Button_Apply_Click"/>
     </Grid>
 </Window>

@@ -14,6 +14,7 @@ namespace DFL_BotAndServer
     {
         public ulong Id { get; private set; }
         public bool IsDisposed { get; private set; } = false;
+        public DateTime LastActivity { get; private set; } = DateTime.Now;
 
         private readonly TcpClient client;
         private readonly NetworkStream networkStream;
@@ -82,6 +83,9 @@ namespace DFL_BotAndServer
 
                 while (isRuning)
                 {
+                    if ((DateTime.Now - LastActivity).TotalMinutes > 3.0)
+                        DisconnectEvent?.Invoke(Id);
+
                     if (networkStream.DataAvailable)
                     {
                         BotClientCommands clientCommand = (BotClientCommands)binaryReader.ReadByte();
@@ -136,6 +140,8 @@ namespace DFL_BotAndServer
 
         public void SendChannels(IList<DiscordChannel> discordChannels)
         {
+            LastActivity = DateTime.Now;
+
             binaryWriter.Write(true);
             binaryWriter.Write(discordChannels.Count);
             foreach (DiscordChannel discordChannel in discordChannels)
@@ -147,6 +153,8 @@ namespace DFL_BotAndServer
 
         public void SendAttachments(IReadOnlyList<DiscordMessage> messages, bool isNext)
         {
+            LastActivity = DateTime.Now;
+
             binaryWriter.Write(true);
             binaryWriter.Write(messages.Count);
             foreach (DiscordMessage message in messages)
@@ -160,6 +168,8 @@ namespace DFL_BotAndServer
 
         public void SendAttachments(DiscordMessage message)
         {
+            LastActivity = DateTime.Now;
+
             binaryWriter.Write(true);
             binaryWriter.Write(1);
             binaryWriter.Write(message.Attachments.Count);
@@ -170,6 +180,8 @@ namespace DFL_BotAndServer
 
         public void SendError(string error)
         {
+            LastActivity = DateTime.Now;
+
             // Отсылаем флаг, указывающий что произошла ошибка
             binaryWriter.Write(false);
             binaryWriter.Write(error);
@@ -197,9 +209,9 @@ namespace DFL_BotAndServer
                 if (binaryWriter != null)
                     binaryWriter.Dispose();
                 if (networkStream != null)
-                    networkStream.Close();
+                    networkStream.Dispose();
                 if (client != null)
-                    client.Close();
+                    client.Dispose();
 
                 //BeginSendEvent = null;
                 //EndSendEvent = null;
@@ -214,6 +226,12 @@ namespace DFL_BotAndServer
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        public void Waiting()
+        {
+            if (processTask != null)
+                processTask.Wait();
         }
     }
 }
