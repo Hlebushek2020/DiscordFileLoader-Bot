@@ -1,0 +1,9 @@
+# DIRECTORIES
+/DFL-BotAndServer/bin/*
+/DFL-BotAndServer/obj/*
+/DFL-Des-Client/VS_Output/*
+/packages/*
+/.vs/*
+# FILES
+*Thumbs.db
+*.user
