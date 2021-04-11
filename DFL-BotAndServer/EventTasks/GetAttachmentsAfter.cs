@@ -44,20 +44,7 @@ namespace DFL_BotAndServer
                 int countBase = count;
                 int limit = MessageLimit;
 
-                if (count >= limit)
-                    count -= limit;
-                else
-                {
-                    limit = count;
-                    count = 0;
-                }
-
-                IReadOnlyList<DiscordMessage> messages = await discordChannel.GetMessagesAfterAsync(messageId, limit);
-                Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Discord Api] [{botClient.Id}] [{limit}|{messages.Count}|{countBase}] Request completed");
-
-                ulong endId = messages.First().Id;
-
-                botClient.SendAttachments(messages, count > 0);
+                IReadOnlyList<DiscordMessage> messages;
 
                 while (count != 0)
                 {
@@ -69,9 +56,7 @@ namespace DFL_BotAndServer
                         count = 0;
                     }
 
-                    Thread.Sleep(1000);
-
-                    messages = await discordChannel.GetMessagesAfterAsync(endId, limit);
+                    messages = await discordChannel.GetMessagesAfterAsync(messageId, limit);
                     Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Discord Api] [{botClient.Id}] [{limit}|{messages.Count}|{countBase}] Request completed");
 
                     if (messages.Count < MessageLimit)
@@ -79,7 +64,11 @@ namespace DFL_BotAndServer
 
                     botClient.SendAttachments(messages, count > 0);
 
-                    endId = messages.First().Id;
+                    if (count > 0)
+                    {
+                        messageId = messages.First().Id;
+                        Thread.Sleep(1000);
+                    }
                 }
             }
             catch (Exception ex)

@@ -15,12 +15,14 @@ namespace DFL_Des_Client.Classes
         [JsonIgnore]
         public static string ProgramResourceFolder { get; } = $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\\SergeyGovorunov\\YukoClient(DFLC)";
 
-        public string Host { get; set; } = string.Empty;
-        public string ImageCollectionEditor { get; set; } = string.Empty;
-        public int Port { get; set; }
+        public string Host { get; set; } = "127.0.0.1";
+        public int Port { get; set; } = 10000;
         public ulong UserId { get; set; }
         public ulong DiscordServerId { get; set; }
-        public Dictionary<string, ulong> ChannelIds { get; } = new Dictionary<string, ulong>();
+        public string ImageCollectionExe { get; set; } = string.Empty;
+        public int MaxDownloadThreads { get; set; } = 4; 
+
+        public Dictionary<ulong, string> ChannelIds { get; } = new Dictionary<ulong, string>();
 
         public void Save()
         {

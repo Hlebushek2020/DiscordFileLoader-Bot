@@ -76,10 +76,10 @@ namespace DFL_BotAndServer
 
                     if (messages.Count < MessageLimit)
                         count = 0;
+                    else
+                        endId = messages.Last().Id;
 
                     botClient.SendAttachments(messages, count > 0);
-
-                    endId = messages.Last().Id;
                 }
             }
             catch (Exception ex)

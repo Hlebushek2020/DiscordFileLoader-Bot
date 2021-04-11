@@ -38,7 +38,9 @@ namespace DFL_Des_Client
 
             Title = App.ProgramName;
 
-            comboBox_Channels.ItemsSource = App.Settings.ChannelIds.Keys;
+            comboBox_Channels.ItemsSource = App.Settings.ChannelIds;
+            comboBox_Channels.DisplayMemberPath = "Value";
+
             if (App.Settings.ChannelIds.Count > 0)
                 comboBox_Channels.SelectedIndex = 0;
 
@@ -111,7 +113,7 @@ namespace DFL_Des_Client
 
             ScriptItem = new ScriptItem
             {
-                ChannelName = comboBox_Channels.Text,
+                ChannelId = ((KeyValuePair<ulong, string>)comboBox_Channels.SelectedItem).Key,
                 Command = command,
                 Count = count,
                 MessageId = messageId

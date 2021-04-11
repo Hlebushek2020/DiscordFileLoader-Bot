@@ -3,6 +3,7 @@ using DFL_Des_Client.Classes.Models;
 using DFL_Des_Client.Enums;
 using DFL_Des_Client.Structures;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -36,7 +37,10 @@ namespace DFL_Des_Client
         private void MenuItem_Settings_Click(object sender, RoutedEventArgs e)
         {
             SettingsWindow settingsWindow = new SettingsWindow();
-            settingsWindow.Show();
+            settingsWindow.ShowDialog();
+
+            if (script.Count > 0 && settingsWindow.IsRefreshScript)
+                listView_Script.Items.Refresh();
         }
 
         private void Button_AddScriptItem_Click(object sender, RoutedEventArgs e)
@@ -76,6 +80,7 @@ namespace DFL_Des_Client
                             foreach (ScriptItem scriptItem in script)
                             {
                                 binaryWriter.Write(scriptItem.ChannelName);
+                                binaryWriter.Write(scriptItem.ChannelId);
                                 binaryWriter.Write((byte)scriptItem.Command);
                                 binaryWriter.Write(scriptItem.Count);
                                 binaryWriter.Write(scriptItem.MessageId);
@@ -108,13 +113,38 @@ namespace DFL_Des_Client
                                 int count = binaryReader.ReadInt32();
                                 for (int i = 0; i < count; i++)
                                 {
+                                    string channelName = binaryReader.ReadString();
+
                                     ScriptItem scriptItem = new ScriptItem
                                     {
-                                        ChannelName = binaryReader.ReadString(),
+                                        ChannelId = binaryReader.ReadUInt64(),
                                         Command = (GetUrlCommand)binaryReader.ReadByte(),
                                         Count = binaryReader.ReadInt32(),
                                         MessageId = binaryReader.ReadUInt64()
                                     };
+
+                                    if (!App.Settings.ChannelIds.ContainsKey(scriptItem.ChannelId))
+                                    {
+                                        if (MessageBox.Show($"Внимание канал с Id {scriptItem.ChannelId} не найден в вашем списке, добавить его?",
+                                            App.ProgramName, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                                        {
+                                            bool contains = App.Settings.ChannelIds.ContainsValue(channelName);
+
+                                            App.Settings.ChannelIds.Add(scriptItem.ChannelId, channelName);
+
+                                            if (contains)
+                                            {
+                                                if (MessageBox.Show($"Канал с названием \"{channelName}\" уже существует. Изменить название (рекомендуется)?",
+                                                    App.ProgramName, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                                                {
+                                                    AddEditChannelWindow editChannelWindow = new AddEditChannelWindow(scriptItem.ChannelId);
+                                                    editChannelWindow.ShowDialog();
+                                                }
+                                            }
+
+                                            App.Settings.Save();
+                                        }
+                                    }
 
                                     script.Add(scriptItem);
                                 }
@@ -194,7 +224,7 @@ namespace DFL_Des_Client
                         binaryWriter.Write((byte)BotClientCommands.GetUrls);
                         binaryWriter.Write((byte)item.Command);
 
-                        binaryWriter.Write(App.Settings.ChannelIds[item.ChannelName]);
+                        binaryWriter.Write(item.ChannelId);
                         binaryWriter.Write(item.MessageId);
                         binaryWriter.Write(item.Count);
 
@@ -343,10 +373,13 @@ namespace DFL_Des_Client
         #region Download
         private void Button_Download_Click(object sender, RoutedEventArgs e)
         {
-            DownloadSettingsWindow downloadSettingsWindow = new DownloadSettingsWindow();
-            downloadSettingsWindow.ShowDialog();
-            if (downloadSettingsWindow.DownloadSettings != null)
-                Task.Run(() => Download(downloadSettingsWindow.DownloadSettings.Value));
+            if (urls.Count != 0)
+            {
+                DownloadSettingsWindow downloadSettingsWindow = new DownloadSettingsWindow();
+                downloadSettingsWindow.ShowDialog();
+                if (downloadSettingsWindow.DownloadSettings != null)
+                    Task.Run(() => Download(downloadSettingsWindow.DownloadSettings.Value));
+            }
         }
 
         private void Download(DownloadSettings settings)
@@ -358,7 +391,7 @@ namespace DFL_Des_Client
                     grid_Progress.Visibility = Visibility.Visible;
                 });
 
-                Downloader downloader = new Downloader(7);
+                Downloader downloader = new Downloader(App.Settings.MaxDownloadThreads);
 
                 Dispatcher.Invoke(() =>
                 {
@@ -371,16 +404,54 @@ namespace DFL_Des_Client
                     textBlock_Progress.Text = "Загрузка ...";
                 });
 
+                HashSet<string> filesTemp = new HashSet<string>();
+
                 foreach (string url in urls)
                 {
-                    downloader.StartNew(() => DownloadFile(url, settings.Folder));
+                    string baseFileName = Path.GetFileName(url);
+                    if (baseFileName.Contains("?"))
+                        baseFileName = baseFileName.Remove(baseFileName.IndexOf("?"));
+
+                    string fileNameFull = $"{settings.Folder}\\{baseFileName}";
+                    string fileName = baseFileName;
+                    
+                    int i = 0;
+
+                    while (File.Exists(fileNameFull) || filesTemp.Contains(fileName))
+                    {
+                        fileName = $"{i}-{baseFileName}";
+                        fileNameFull = $"{settings.Folder}\\{fileName}";
+                        i++;
+                    }
+
+                    filesTemp.Add(fileName);
+
+                    downloader.StartNew(() => DownloadFile(url, fileNameFull));
+
                     Dispatcher.Invoke(() =>
                     {
                         progressBar_Progress1.Value++;
                     });
                 }
 
+                filesTemp.Clear();
+
                 while (downloader.CompletedCount < urls.Count) { };
+
+                if (settings.OpenInIc)
+                {
+                    string arguments = $"\"{settings.Folder}\"";
+
+                    if (settings.SearchCollections)
+                        arguments += " -oc";
+
+                    using (Process imageCollection = new Process())
+                    {
+                        imageCollection.StartInfo.FileName = App.Settings.ImageCollectionExe;
+                        imageCollection.StartInfo.Arguments = arguments;
+                        imageCollection.Start();
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -393,37 +464,16 @@ namespace DFL_Des_Client
                     grid_Progress.Visibility = Visibility.Hidden;
                 });
             }
-
-            if (settings.OpenInIce)
-            {
-                string arguments = $"\"{settings.Folder}\"";
-
-                if (settings.SearchCollections)
-                    arguments += " -oc";
-
-                using (Process ice = new Process())
-                {
-                    ice.StartInfo.FileName = App.Settings.ImageCollectionEditor;
-                    ice.StartInfo.Arguments = arguments;
-                    ice.Start();
-                }
-            }
-            
         }
 
-        private void DownloadFile(string url, string path)
+        private void DownloadFile(string url, string fileName)
         {
-            using (WebClient webClient = new WebClient())
+            try
             {
-                string file = $"{path}\\{Path.GetFileName(url)}";
-                int i = 0;
-                while (File.Exists(file))
-                {
-                    file = $"{path}\\{i}-{Path.GetFileName(url)}";
-                    i++;
-                }
-                webClient.DownloadFile(new Uri(url), file);
+                using (WebClient webClient = new WebClient())
+                    webClient.DownloadFile(new Uri(url), fileName);
             }
+            catch { }
             Dispatcher.Invoke(() =>
             {
                 progressBar_Progress2.Value++;

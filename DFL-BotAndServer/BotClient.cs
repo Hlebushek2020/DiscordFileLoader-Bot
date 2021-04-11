@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace DFL_BotAndServer
 {
@@ -138,7 +139,7 @@ namespace DFL_BotAndServer
             }
         }
 
-        public void SendChannels(IList<DiscordChannel> discordChannels)
+        public void SendChannels(IReadOnlyList<DiscordChannel> discordChannels)
         {
             LastActivity = DateTime.Now;
 
@@ -159,9 +160,13 @@ namespace DFL_BotAndServer
             binaryWriter.Write(messages.Count);
             foreach (DiscordMessage message in messages)
             {
-                binaryWriter.Write(message.Attachments.Count);
-                foreach (DiscordAttachment attachment in message.Attachments)
-                    binaryWriter.Write(attachment.Url);
+                IEnumerable<string> items = message.Attachments.Select(x => x.Url)
+                    .Concat(message.Embeds.Where(x => x.Image != null)
+                    .Select(x => x.Image.Url.ToString()));
+
+                binaryWriter.Write(items.Count());
+                foreach (string item in items)
+                    binaryWriter.Write(item);
             }
             binaryWriter.Write(isNext);
         }
@@ -173,8 +178,15 @@ namespace DFL_BotAndServer
             binaryWriter.Write(true);
             binaryWriter.Write(1);
             binaryWriter.Write(message.Attachments.Count);
-            foreach (DiscordAttachment attachment in message.Attachments)
-                binaryWriter.Write(attachment.Url);
+
+            IEnumerable<string> items = message.Attachments.Select(x => x.Url)
+                .Concat(message.Embeds.Where(x => x.Image != null)
+                .Select(x => x.Image.Url.ToString()));
+
+            binaryWriter.Write(items.Count());
+            foreach (string item in items)
+                binaryWriter.Write(item);
+        
             binaryWriter.Write(false);
         }
 

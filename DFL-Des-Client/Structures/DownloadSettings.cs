@@ -9,13 +9,13 @@ namespace DFL_Des_Client.Structures
     public struct DownloadSettings
     {
         public string Folder { get; }
-        public bool OpenInIce { get; }
+        public bool OpenInIc { get; }
         public bool SearchCollections { get; }
 
-        public DownloadSettings(string folder, bool openInIce, bool searchCollections)
+        public DownloadSettings(string folder, bool openInIc, bool searchCollections)
         {
             Folder = folder;
-            OpenInIce = openInIce;
+            OpenInIc = openInIc;
             SearchCollections = searchCollections;
         }
     }

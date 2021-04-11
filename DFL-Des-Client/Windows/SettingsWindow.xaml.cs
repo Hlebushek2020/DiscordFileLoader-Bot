@@ -24,6 +24,8 @@ namespace DFL_Des_Client
     /// </summary>
     public partial class SettingsWindow : Window
     {
+        public bool IsRefreshScript { get; private set; } = false;
+
         public SettingsWindow()
         {
             InitializeComponent();
@@ -34,12 +36,24 @@ namespace DFL_Des_Client
             textBox_Port.Text = App.Settings.Port.ToString();
             textBox_UserId.Text = App.Settings.UserId.ToString();
             textBox_DiscordServerId.Text = App.Settings.DiscordServerId.ToString();
+            textBox_ImageCollectionExe.Text = App.Settings.ImageCollectionExe;
             listView_ChannelIds.ItemsSource = App.Settings.ChannelIds;
+
+            if (App.Settings.MaxDownloadThreads < 1)
+                App.Settings.MaxDownloadThreads = 4;
+
+            if (App.Settings.MaxDownloadThreads > 10)
+            {
+                comboBox_MaxDownloadThreads.Items.Add(App.Settings.MaxDownloadThreads);
+                comboBox_MaxDownloadThreads.SelectedIndex = 10;
+            }
+            else
+                comboBox_MaxDownloadThreads.SelectedIndex = App.Settings.MaxDownloadThreads - 1;
         }
 
         private void Button_Add_Click(object sender, RoutedEventArgs e)
         {
-            AddChannelWindow addChannelWindow = new AddChannelWindow();
+            AddEditChannelWindow addChannelWindow = new AddEditChannelWindow();
             addChannelWindow.ShowDialog();
             if (addChannelWindow.IsRefreshView)
                 listView_ChannelIds.Items.Refresh();
@@ -47,23 +61,17 @@ namespace DFL_Des_Client
 
         private void Button_Remove_Click(object sender, RoutedEventArgs e)
         {
-            object selectedItemObject = listView_ChannelIds.SelectedItem;
-            if (selectedItemObject != null)
+            if (listView_ChannelIds.SelectedItem != null)
             {
-                string name = ((KeyValuePair<string, ulong>)selectedItemObject).Key;
-                if (MessageBox.Show($"Удалить запись с названием \"{name}\"?", App.ProgramName, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                KeyValuePair<ulong, string> entry = (KeyValuePair<ulong, string>)listView_ChannelIds.SelectedItem;
+                if (MessageBox.Show($"Удалить запись с названием \"{entry.Value}\"?", App.ProgramName, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                 {
-                    App.Settings.ChannelIds.Remove(name);
+                    App.Settings.ChannelIds.Remove(entry.Key);
                     listView_ChannelIds.Items.Refresh();
+
+                    IsRefreshScript = true;
                 }
             }
-        }
-
-        private void Window_Closed(object sender, EventArgs e)
-        {
-            App.Settings.Host = textBox_Host.Text;
-            App.Settings.Port = Convert.ToInt32(textBox_Port.Text);
-            App.Settings.Save();
         }
 
         private bool CheckSettings(out string error)
@@ -114,10 +122,11 @@ namespace DFL_Des_Client
             else
             {
                 App.Settings.Host = textBox_Host.Text;
-                App.Settings.ImageCollectionEditor = textBox_ImageCollectionEditor.Text;
+                App.Settings.ImageCollectionExe = textBox_ImageCollectionExe.Text;
                 App.Settings.Port = int.Parse(textBox_Port.Text);
                 App.Settings.UserId = ulong.Parse(textBox_UserId.Text);
                 App.Settings.DiscordServerId = ulong.Parse(textBox_DiscordServerId.Text);
+                App.Settings.MaxDownloadThreads = (int)comboBox_MaxDownloadThreads.SelectedItem;
                 App.Settings.Save();
             }
         }
@@ -128,9 +137,12 @@ namespace DFL_Des_Client
             {
                 App.Settings.ChannelIds.Clear();
                 listView_ChannelIds.Items.Refresh();
+
+                IsRefreshScript = true;
             }
         }
 
+        #region Get Channels
         private void Button_GetChannels_Click(object sender, RoutedEventArgs e)
         {
             if (!CheckSettings(out string warningText))
@@ -139,11 +151,13 @@ namespace DFL_Des_Client
                 return;
             }
 
-            if (MessageBox.Show("Очистить текущий список? Это действие рекомендуется, во избежании лишних ошибок.", App.ProgramName, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+            if (MessageBox.Show("Очистить текущий список?", App.ProgramName, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
                 App.Settings.ChannelIds.Clear();
 
+            IsRefreshScript = true;
+
             Task.Run(() => GetChannels(
-                Dispatcher.Invoke<string>(() => textBox_Host.Text), 
+                Dispatcher.Invoke<string>(() => textBox_Host.Text),
                 int.Parse(Dispatcher.Invoke<string>(() => textBox_Port.Text)),
                 ulong.Parse(Dispatcher.Invoke<string>(() => textBox_UserId.Text)),
                 ulong.Parse(Dispatcher.Invoke<string>(() => textBox_DiscordServerId.Text))
@@ -227,7 +241,9 @@ namespace DFL_Des_Client
                         {
                             name = binaryReader.ReadString();
                             id = binaryReader.ReadUInt64();
-                            App.Settings.ChannelIds.Add(name, id);
+
+                            if (!App.Settings.ChannelIds.ContainsKey(id))
+                                App.Settings.ChannelIds.Add(id, name);
 
                             Dispatcher.Invoke(() =>
                             {
@@ -263,8 +279,9 @@ namespace DFL_Des_Client
 
             }
         }
+        #endregion
 
-        private void Button_SelectImageCollectionEditorExe_Click(object sender, RoutedEventArgs e)
+        private void Button_SelectImageCollectionExe_Click(object sender, RoutedEventArgs e)
         {
             using (System.Windows.Forms.OpenFileDialog openFileDialog = new System.Windows.Forms.OpenFileDialog
             {
@@ -273,7 +290,25 @@ namespace DFL_Des_Client
             })
             {
                 if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                    textBox_ImageCollectionEditor.Text = openFileDialog.FileName;
+                    textBox_ImageCollectionExe.Text = openFileDialog.FileName;
+            }
+        }
+
+        private void Button_Edit_Click(object sender, RoutedEventArgs e)
+        {
+            if (listView_ChannelIds.SelectedItem != null)
+            {
+                ulong channelId = ((KeyValuePair<ulong, string>)listView_ChannelIds.SelectedItem).Key;
+                
+                AddEditChannelWindow editChannelWindow = new AddEditChannelWindow(channelId);
+                editChannelWindow.ShowDialog();
+
+                if (editChannelWindow.IsRefreshView)
+                {
+                    listView_ChannelIds.Items.Refresh();
+
+                    IsRefreshScript = true;
+                }
             }
         }
     }

@@ -44,7 +44,9 @@ namespace DFL_BotAndServer
 
                 IReadOnlyList<DiscordChannel> discordChannels = await discordGuild.GetChannelsAsync();
 
-                botClient.SendChannels(discordChannels.Where(x => x.Users.Contains(discordMemberBot) && x.Users.Contains(discordMemberUsr)).ToList());
+                discordChannels = discordChannels.Where(x => !x.IsCategory && x.Users.Contains(discordMemberBot) && x.Users.Contains(discordMemberUsr)).ToList();
+
+                botClient.SendChannels(discordChannels);
             }
             catch (Exception ex)
             {

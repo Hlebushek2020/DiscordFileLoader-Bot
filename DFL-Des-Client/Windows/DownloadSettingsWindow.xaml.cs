@@ -54,7 +54,7 @@ namespace DFL_Des_Client
 
             if (checkBox_ICEOpen.IsChecked.Value)
             {
-                if (string.IsNullOrEmpty(App.Settings.ImageCollectionEditor))
+                if (string.IsNullOrEmpty(App.Settings.ImageCollectionExe))
                 {
                     MessageBox.Show("Для использования Image Collection укажите исполняемый файл в настройках клиента.", App.ProgramName, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;

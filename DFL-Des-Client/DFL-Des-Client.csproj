@@ -90,7 +90,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Windows\AddChannelWindow.xaml">
+    <Page Include="Windows\AddEditChannelWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -109,8 +109,8 @@
     </Compile>
     <Compile Include="Classes\Models\ScriptItem.cs" />
     <Compile Include="Enums\GetUrlCommand.cs" />
-    <Compile Include="Windows\AddChannelWindow.xaml.cs">
-      <DependentUpon>AddChannelWindow.xaml</DependentUpon>
+    <Compile Include="Windows\AddEditChannelWindow.xaml.cs">
+      <DependentUpon>AddEditChannelWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Classes\Settings.cs" />
     <Compile Include="Windows\SettingsWindow.xaml.cs">
@@ -183,6 +183,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\edit.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
