@@ -10,6 +10,7 @@ using DSharpPlus.CommandsNext;
 using DFL_BotAndServer.Commands;
 using System.Linq;
 using System.Threading;
+using DFL_Des_Client.Classes;
 
 namespace DFL_BotAndServer
 {
@@ -101,6 +102,14 @@ namespace DFL_BotAndServer
             if (isRuning) return;
 
             isRuning = true;
+
+            while (!InternetСheck.Check(out int code, out string message))
+            {
+                Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [ERROR] [{code}] Network problems " +
+                    $"{(string.IsNullOrEmpty(message) ? message : $"({message})")}, re-check after 30 seconds ...");
+                Thread.Sleep(30000);
+            }
+            Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] Network Ok");
 
             Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Discord Api] Authorization ...");
             await discordClient.ConnectAsync();

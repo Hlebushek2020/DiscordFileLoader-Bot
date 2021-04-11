@@ -16,6 +16,7 @@ namespace DFL_BotAndServer
         public ulong AdminId { get; set; } = 0;
         public string PublicAddress { get; set; } = "empty";
         public string InternalAddress { get; set; } = "0.0.0.0";
+        public string InternetCheckAddress { get; set; } = "8.8.8.8";
         public string Token { get; set; } = "empty";
         public string ActualAppUrl { get; set; } = "empty";
         public bool WriteLogToFile { get; set; } = true;
