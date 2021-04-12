@@ -57,7 +57,6 @@ namespace DFL_BotAndServer
             networkStream = client.GetStream();
             binaryReader = new BinaryReader(networkStream, Encoding.UTF8);
             binaryWriter = new BinaryWriter(networkStream, Encoding.UTF8);
-            Id = binaryReader.ReadUInt64();
         }
 
         ~BotClient() => Dispose(false);
@@ -72,6 +71,8 @@ namespace DFL_BotAndServer
         {
             try
             {
+                Id = binaryReader.ReadUInt64();
+
                 version = new BotClientVersion(binaryReader);
                 if (!version.CheckCompatibility())
                 {
@@ -132,10 +133,10 @@ namespace DFL_BotAndServer
                     }
                 }
             }
-            catch (SocketException ex)
+            catch (Exception ex)
             {
-                if (!ex.NativeErrorCode.Equals(10035))
-                    DisconnectEvent?.Invoke(Id);
+                Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [{Id}] [ERROR] {ex.Message}");
+                DisconnectEvent?.Invoke(Id);
             }
         }
 

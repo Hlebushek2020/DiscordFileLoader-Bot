@@ -11,6 +11,7 @@ using DFL_BotAndServer.Commands;
 using System.Linq;
 using System.Threading;
 using DFL_Des_Client.Classes;
+using DSharpPlus.EventArgs;
 
 namespace DFL_BotAndServer
 {
@@ -65,6 +66,7 @@ namespace DFL_BotAndServer
             commands.CommandErrored += Commands_CommandErrored;
 
             discordClient.Ready += DiscordClient_Ready;
+            discordClient.SocketErrored += DiscordClient_SocketErrored;
 
             Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] Initialization Server ...");
             tcpListener = new TcpListener(IPAddress.Parse(settings.InternalAddress), settings.Port);
@@ -80,16 +82,21 @@ namespace DFL_BotAndServer
         private Task Commands_CommandErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
         {
             if (e.Exception.HResult == -2146233088)
-                e.Context.RespondAsync("Я не знаю такой команды :(");
-            else if (e.Exception.HResult == -2147024809)
-                e.Context.RespondAsync("Ой, в команде ошибка, я не знаю что делать :(");
-            else
-                e.Context.RespondAsync($"[{e.Exception.HResult}] {e.Exception.Message}");
-            return Task.CompletedTask;
+                return e.Context.RespondAsync("Я не знаю такой команды :(");
+            if (e.Exception.HResult == -2147024809)
+                return e.Context.RespondAsync("Ой, в команде ошибка, я не знаю что делать :(");
+            return e.Context.RespondAsync($"[{e.Exception.HResult}] {e.Exception.Message}");
         }
 
-        private Task DiscordClient_Ready(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e) =>
-            sender.UpdateStatusAsync(new DiscordActivity("≧◡≦ | >yuko help", ActivityType.Playing));
+        private Task DiscordClient_Ready(DiscordClient sender, ReadyEventArgs e) =>
+            sender.UpdateStatusAsync(new DiscordActivity("≧◡≦ | >yuko help", ActivityType.Watching));
+
+        private Task DiscordClient_SocketErrored(DiscordClient sender, SocketErrorEventArgs e)
+        {
+            Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [CRIT ERROR] {e.Exception.Message}");
+            Environment.Exit(1);
+            return Task.CompletedTask;
+        }
 
         public Task RunAsync()
         {
@@ -159,7 +166,6 @@ namespace DFL_BotAndServer
                 }
                 catch (Exception ex)
                 {
-                    //if (isRuning)
                     Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [ADD-CLIENT] [ERROR] {ex.Message}");
                 }
             }
