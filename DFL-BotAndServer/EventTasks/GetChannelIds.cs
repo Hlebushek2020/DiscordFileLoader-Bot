@@ -13,7 +13,7 @@ namespace DFL_BotAndServer
     {
         private async Task GetChannelIds(BotClient botClient, ulong discordServerId)
         {
-            Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [{botClient.Id}] GetChannelIds");
+            Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [{botClient.Id} {botClient.UserId}] GetChannelIds");
             try
             {
                 DiscordGuild discordGuild = null;
@@ -23,7 +23,7 @@ namespace DFL_BotAndServer
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [{botClient.Id}] [ERROR G] {ex.Message}");
+                    Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [{botClient.Id} {botClient.UserId}] [ERROR G] {ex.Message}");
                     botClient.SendError(ServerNotFound);
                     return;
                 }
@@ -33,11 +33,11 @@ namespace DFL_BotAndServer
                 try
                 {
                     discordMemberBot = await discordGuild.GetMemberAsync(discordClient.CurrentUser.Id);
-                    discordMemberUsr = await discordGuild.GetMemberAsync(botClient.Id);
+                    discordMemberUsr = await discordGuild.GetMemberAsync(botClient.UserId);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [{botClient.Id}] [ERROR MB] {ex.Message}");
+                    Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [{botClient.Id} {botClient.UserId}] [ERROR MB] {ex.Message}");
                     botClient.SendError(UserNotFound);
                     return;
                 }
@@ -50,7 +50,7 @@ namespace DFL_BotAndServer
             }
             catch (Exception ex)
             {
-                string error = $"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [{botClient.Id}] [ERROR] {ex.Message}";
+                string error = $"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [{botClient.Id} {botClient.UserId}] [ERROR] {ex.Message}";
                 Console.WriteLine(error);
                 try
                 {
@@ -65,7 +65,7 @@ namespace DFL_BotAndServer
                 catch { }
             }
 
-            Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [{botClient.Id}] GetChannelIds Completed");
+            Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [{botClient.Id} {botClient.UserId}] GetChannelIds Completed");
         }
     }
 }

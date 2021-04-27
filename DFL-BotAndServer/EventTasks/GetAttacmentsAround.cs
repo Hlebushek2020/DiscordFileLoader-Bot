@@ -12,7 +12,7 @@ namespace DFL_BotAndServer
     {
         private async Task GetAttacmentsAround(BotClient botClient, ulong channelId, ulong messageId, int count)
         {
-            Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [{botClient.Id}] GetAttacmentsBefore");
+            Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [{botClient.Id} {botClient.UserId}] GetAttacmentsBefore");
             try
             {
                 DiscordChannel discordChannel = null;
@@ -22,7 +22,7 @@ namespace DFL_BotAndServer
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [{botClient.Id}] [ERROR C] {ex.Message}");
+                    Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [{botClient.Id} {botClient.UserId}] [ERROR C] {ex.Message}");
                     botClient.SendError(ChannelNotFound);
                     return;
                 }
@@ -30,11 +30,11 @@ namespace DFL_BotAndServer
                 DiscordMember discordMember = null;
                 try
                 {
-                    discordMember = await discordChannel.Guild.GetMemberAsync(botClient.Id);
+                    discordMember = await discordChannel.Guild.GetMemberAsync(botClient.UserId);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [{botClient.Id}] [ERROR M] {ex.Message}");
+                    Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [{botClient.Id} {botClient.UserId}] [ERROR M] {ex.Message}");
                     botClient.SendError(UserNotFound);
                     return;
                 }
@@ -43,13 +43,13 @@ namespace DFL_BotAndServer
                     count = MessageLimit;
 
                 IReadOnlyList<DiscordMessage> messages = await discordChannel.GetMessagesAroundAsync(messageId, count);
-                Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Discord Api] [{botClient.Id}] [{count}|{messages.Count}] Request completed");
+                Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Discord Api] [{botClient.Id} {botClient.UserId}] [{count}|{messages.Count}] Request completed");
 
                 botClient.SendAttachments(messages, count > 0);
             }
             catch (Exception ex)
             {
-                string error = $"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [{botClient.Id}] [ERROR] {ex.Message}";
+                string error = $"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [{botClient.Id} {botClient.UserId}] [ERROR] {ex.Message}";
                 Console.WriteLine(error);
                 try
                 {
@@ -64,7 +64,7 @@ namespace DFL_BotAndServer
                 catch { }
             }
 
-            Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [{botClient.Id}] GetAttacmentsBefore Completed");
+            Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [{botClient.Id} {botClient.UserId}] GetAttacmentsBefore Completed");
         }
     }
 }

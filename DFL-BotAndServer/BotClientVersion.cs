@@ -20,5 +20,8 @@ namespace DFL_BotAndServer
             Major = reader.ReadInt32();
             Minor = reader.ReadInt32();
         }
+
+        public override string ToString() => $"{Major}.{Minor}";
+
     }
 }

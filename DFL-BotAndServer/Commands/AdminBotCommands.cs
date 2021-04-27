@@ -1,9 +1,11 @@
-﻿using DSharpPlus.CommandsNext;
+﻿using DFL_BotAndServer.Interfaces;
+using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace DFL_BotAndServer.Commands
 {
@@ -53,9 +55,23 @@ namespace DFL_BotAndServer.Commands
             else
             {
                 StringBuilder stringBuilder = new StringBuilder();
-                foreach (KeyValuePair<ulong, DateTime> client in YukoBot.GetInstance().GetClientList())
-                    stringBuilder.AppendLine($"[{client.Value.ToLongTimeString()}] {client.Key}");
-                if (stringBuilder.Length == 0)
+                List<IReadOnlyBotClient> clients = YukoBot.GetInstance().GetClientList().ToList();
+                if (clients.Count != 0)
+                {
+                    stringBuilder.AppendLine("**Id\t|\tUser Id\t|\tActive\t|\tClient Version**");
+                    foreach (IReadOnlyBotClient client in clients)
+                    {
+                        stringBuilder.Append(client.Id);
+                        stringBuilder.Append("\t");
+                        stringBuilder.Append(client.LastActivity.ToLongTimeString());
+                        stringBuilder.Append("\t");
+                        stringBuilder.Append(client.UserId);
+                        stringBuilder.Append("\t");
+                        stringBuilder.Append(client.Version);
+                        stringBuilder.Append("\n");
+                    }
+                }
+                else
                     stringBuilder.Append("No Clients");
                 await commandContext.RespondAsync(stringBuilder.ToString());
             }
