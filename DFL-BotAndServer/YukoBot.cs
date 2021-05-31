@@ -10,6 +10,9 @@ using DSharpPlus.CommandsNext;
 using DFL_BotAndServer.Commands;
 using System.Linq;
 using System.Threading;
+using DFL_Des_Client.Classes;
+using DSharpPlus.EventArgs;
+using DFL_BotAndServer.Interfaces;
 
 namespace DFL_BotAndServer
 {
@@ -21,8 +24,6 @@ namespace DFL_BotAndServer
         private const string ChannelNotFound = "Канал не найден или бот не авторизован. Действие отклонено.";
         private const string UserNotFound = "Вас нет на этом сервере. Действие отклонено.";
         private const int MessageLimit = 100;
-        //private const string ServerNotFound = "Я не знаю такого сервера (T_T)";
-        //private const string UserNotFound = "Я не могу найти вас на этом сервере (T_T)";
 
         public bool IsDisposed { get; private set; } = false;
         public int ClientCount { get => clients.Count; }
@@ -34,7 +35,7 @@ namespace DFL_BotAndServer
         private Task processTask;
         private volatile bool isRuning = false;
 
-        private readonly Dictionary<ulong, BotClient> clients = new Dictionary<ulong, BotClient>();
+        private readonly Dictionary<Guid, BotClient> clients = new Dictionary<Guid, BotClient>();
 
         public static YukoBot GetInstance()
         {
@@ -64,6 +65,7 @@ namespace DFL_BotAndServer
             commands.CommandErrored += Commands_CommandErrored;
 
             discordClient.Ready += DiscordClient_Ready;
+            discordClient.SocketErrored += DiscordClient_SocketErrored;
 
             Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] Initialization Server ...");
             tcpListener = new TcpListener(IPAddress.Parse(settings.InternalAddress), settings.Port);
@@ -73,22 +75,26 @@ namespace DFL_BotAndServer
 
         ~YukoBot() => Dispose(false);
 
-        public IEnumerable<KeyValuePair<ulong, DateTime>> GetClientList() => 
-            clients.Select(x => new KeyValuePair<ulong, DateTime>(x.Key, x.Value.LastActivity));
+        public IEnumerable<IReadOnlyBotClient> GetClientList() => clients.Select(x => x.Value);
 
         private Task Commands_CommandErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
         {
             if (e.Exception.HResult == -2146233088)
-                e.Context.RespondAsync("Я не знаю такой команды :(");
-            else if (e.Exception.HResult == -2147024809)
-                e.Context.RespondAsync("Ой, в команде ошибка, я не знаю что делать :(");
-            else
-                e.Context.RespondAsync($"[{e.Exception.HResult}] {e.Exception.Message}");
-            return Task.CompletedTask;
+                return e.Context.RespondAsync("Я не знаю такой команды :(");
+            if (e.Exception.HResult == -2147024809)
+                return e.Context.RespondAsync("Ой, в команде ошибка, я не знаю что делать :(");
+            return e.Context.RespondAsync($"[{e.Exception.HResult}] {e.Exception.Message}");
         }
 
-        private Task DiscordClient_Ready(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e) =>
-            sender.UpdateStatusAsync(new DiscordActivity("≧◡≦ | >yuko help", ActivityType.Playing));
+        private Task DiscordClient_Ready(DiscordClient sender, ReadyEventArgs e) =>
+            sender.UpdateStatusAsync(new DiscordActivity("на тебя (≧◡≦) | >yuko help", ActivityType.Watching));
+
+        private Task DiscordClient_SocketErrored(DiscordClient sender, SocketErrorEventArgs e)
+        {
+            Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [CRIT ERROR] {e.Exception.Message}");
+            Environment.Exit(1);
+            return Task.CompletedTask;
+        }
 
         public Task RunAsync()
         {
@@ -101,6 +107,14 @@ namespace DFL_BotAndServer
             if (isRuning) return;
 
             isRuning = true;
+
+            while (!InternetСheck.Check(out int code, out string message))
+            {
+                Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [ERROR] [{code}] Network problems " +
+                    $"{(string.IsNullOrEmpty(message) ? message : $"({message})")}, re-check after 30 seconds ...");
+                Thread.Sleep(30000);
+            }
+            Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] Network Ok");
 
             Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Discord Api] Authorization ...");
             await discordClient.ConnectAsync();
@@ -122,17 +136,7 @@ namespace DFL_BotAndServer
                     }
 
                     BotClient botClient = new BotClient(tcpListener.AcceptTcpClient());
-
-                    if (clients.ContainsKey(botClient.Id))
-                    {
-                        clients[botClient.Id].Dispose();
-                        clients.Remove(botClient.Id);
-                        Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] Client {botClient.Id} reconnected");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] Clitnt {botClient.Id} connected");
-                    }
+                    Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] Clitnt {botClient.Id} connected");
 
                     clients.Add(botClient.Id, botClient);
 
@@ -150,7 +154,6 @@ namespace DFL_BotAndServer
                 }
                 catch (Exception ex)
                 {
-                    //if (isRuning)
                     Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [ADD-CLIENT] [ERROR] {ex.Message}");
                 }
             }
@@ -177,7 +180,7 @@ namespace DFL_BotAndServer
             await GetAttachment(botClient, channelId, messageId);
 
         #region Disconnect Event
-        private void BotClient_DisconnectEvent(ulong id)
+        private void BotClient_DisconnectEvent(Guid id)
         {
             clients[id].Dispose();
             Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] Client {clients[id].Id} disconnected");

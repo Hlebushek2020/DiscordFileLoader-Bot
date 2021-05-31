@@ -8,26 +8,30 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
+using DFL_BotAndServer.Interfaces;
 
 namespace DFL_BotAndServer
 {
-    public class BotClient
+    public class BotClient : IReadOnlyBotClient
     {
-        public ulong Id { get; private set; }
+        public Guid Id { get; }
+        public ulong UserId { get; private set; }
         public bool IsDisposed { get; private set; } = false;
         public DateTime LastActivity { get; private set; } = DateTime.Now;
+        public BotClientVersion Version { get; private set; }
 
         private readonly TcpClient client;
         private readonly NetworkStream networkStream;
         private readonly BinaryReader binaryReader;
         private readonly BinaryWriter binaryWriter;
 
-        private BotClientVersion version;
         private Task processTask;
         private volatile bool isRuning = true;
+        private AutoResetEvent autoResetTimer = new AutoResetEvent(false);
+        private Timer activeChecker;
 
         #region Events
-        public delegate void DisconnectEventHandler(ulong id);
+        public delegate void DisconnectEventHandler(Guid id);
         public event DisconnectEventHandler DisconnectEvent;
 
         public delegate void GetChannelIdsEventHandler(BotClient botClient, ulong discordServerId);
@@ -53,11 +57,12 @@ namespace DFL_BotAndServer
 
         public BotClient(TcpClient client)
         {
+            Id = Guid.NewGuid();
+            activeChecker = new Timer(CheckTime, autoResetTimer, 90000, 90000);
             this.client = client;
             networkStream = client.GetStream();
             binaryReader = new BinaryReader(networkStream, Encoding.UTF8);
             binaryWriter = new BinaryWriter(networkStream, Encoding.UTF8);
-            Id = binaryReader.ReadUInt64();
         }
 
         ~BotClient() => Dispose(false);
@@ -68,12 +73,24 @@ namespace DFL_BotAndServer
             await processTask;
         }
 
+        private void CheckTime(object stateTimer)
+        {
+            if ((DateTime.Now - LastActivity).TotalMinutes >= 3.0)
+            {
+                AutoResetEvent autoEvent = (AutoResetEvent)stateTimer;
+                autoResetTimer.Set();
+                DisconnectEvent?.Invoke(Id);
+            }
+        }
+
         private async Task Process()
         {
             try
             {
-                version = new BotClientVersion(binaryReader);
-                if (!version.CheckCompatibility())
+                UserId = binaryReader.ReadUInt64();
+
+                Version = new BotClientVersion(binaryReader);
+                if (!Version.CheckCompatibility())
                 {
                     SendError("Текущая версия клиента не совместима с текущей версией бота");
                     isRuning = false;
@@ -84,9 +101,6 @@ namespace DFL_BotAndServer
 
                 while (isRuning)
                 {
-                    if ((DateTime.Now - LastActivity).TotalMinutes > 3.0)
-                        DisconnectEvent?.Invoke(Id);
-
                     if (networkStream.DataAvailable)
                     {
                         BotClientCommands clientCommand = (BotClientCommands)binaryReader.ReadByte();
@@ -132,10 +146,10 @@ namespace DFL_BotAndServer
                     }
                 }
             }
-            catch (SocketException ex)
+            catch (Exception ex)
             {
-                if (!ex.NativeErrorCode.Equals(10035))
-                    DisconnectEvent?.Invoke(Id);
+                Console.WriteLine($"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [Server] [{Id}] [ERROR] {ex.Message}");
+                DisconnectEvent?.Invoke(Id);
             }
         }
 
@@ -216,6 +230,11 @@ namespace DFL_BotAndServer
                     processTask.Dispose();
                 }
 
+                if (activeChecker != null)
+                    activeChecker.Dispose();
+                if (activeChecker != null)
+                    autoResetTimer.Dispose();
+
                 if (binaryReader != null)
                     binaryReader.Dispose();
                 if (binaryWriter != null)
@@ -224,11 +243,6 @@ namespace DFL_BotAndServer
                     networkStream.Dispose();
                 if (client != null)
                     client.Dispose();
-
-                //BeginSendEvent = null;
-                //EndSendEvent = null;
-                //MessageEvent = null;
-                //DisconnectEvent = null;
             }
 
             IsDisposed = true;
