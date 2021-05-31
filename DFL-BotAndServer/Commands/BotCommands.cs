@@ -6,8 +6,12 @@ using System.Threading.Tasks;
 
 namespace DFL_BotAndServer.Commands
 {
-    public class BotCommands : BaseCommandModule
+    public class BotCommands : YukoBaseCommandModule
     {
+        public BotCommands()
+        {
+            ModuleName = "Для Пользователей";
+        } 
 
         [Command("get-my-id")]
         [Description("Выдает Id пользователя выполнившего данную команду.")]

@@ -34,11 +34,36 @@ namespace DFL_BotAndServer.Commands
 
         public override BaseHelpFormatter WithSubcommands(IEnumerable<Command> subcommands)
         {
-            foreach (var cmd in subcommands)
-                if (string.IsNullOrEmpty(cmd.Description))
-                    embed.AddField(cmd.Name, "empty");
-                else
-                    embed.AddField(cmd.Name, cmd.Description);
+            Dictionary<string, List<string[]>> sortedCommand = new Dictionary<string, List<string[]>>();
+
+            foreach (Command command in subcommands)
+            {
+                if (command.Module is null)
+                    continue;
+
+                if (!(command.Module is SingletonCommandModule))
+                    continue;
+
+                YukoBaseCommandModule yukoModule = (command.Module as SingletonCommandModule).Instance as YukoBaseCommandModule;
+
+                if (string.IsNullOrEmpty(yukoModule.ModuleName))
+                    continue;
+
+                if (!sortedCommand.ContainsKey(yukoModule.ModuleName))
+                    sortedCommand.Add(yukoModule.ModuleName, new List<string[]>());
+
+                sortedCommand[yukoModule.ModuleName].Add(new string[] {command.Name, command.Description});
+            }
+
+            foreach (var commandsEntry in sortedCommand)
+            {
+                embed.AddField(commandsEntry.Key, new string('=', commandsEntry.Key.Length));
+                foreach (string[] item in commandsEntry.Value)
+                {
+                    embed.AddField(item[0], item[1]);
+                }
+            }
+
             return this;
         }
     }
