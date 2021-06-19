@@ -58,9 +58,11 @@ namespace DFL_BotAndServer
             {
                 StringPrefixes = new[] { ">yuko" }
             });
+
             commands.SetHelpFormatter<CustomHelpFormatter>();
             commands.RegisterCommands<BotCommands>();
             commands.RegisterCommands<AdminBotCommands>();
+            commands.RegisterCommands<OwnerBotCommands>();
 
             commands.CommandErrored += Commands_CommandErrored;
 
