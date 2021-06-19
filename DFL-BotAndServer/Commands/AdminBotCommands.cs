@@ -10,7 +10,7 @@ using DSharpPlus;
 
 namespace DFL_BotAndServer.Commands
  {
-    [RequirePermissions(Permissions.Administrator)]
+    [RequireUserPermissions(Permissions.Administrator)]
     public class AdminBotCommands : YukoBaseCommandModule
     {
         //private const string NoAdmin = "Ай-яй-яй! Нельзя!";

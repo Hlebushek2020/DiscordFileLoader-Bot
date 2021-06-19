@@ -52,7 +52,17 @@ namespace DFL_BotAndServer.Commands
                 if (!sortedCommand.ContainsKey(yukoModule.ModuleName))
                     sortedCommand.Add(yukoModule.ModuleName, new List<string[]>());
 
-                sortedCommand[yukoModule.ModuleName].Add(new string[] {command.Name, command.Description});
+                StringBuilder aliases = new StringBuilder();
+                foreach (string alias in command.Aliases)
+                    aliases.Append(alias).Append(", ");
+
+                string fullNameCommand = command.Name;
+                if (aliases.Length > 0)
+                {
+                    aliases.Remove(aliases.Length - 2, 2);
+                    fullNameCommand = $"{fullNameCommand} ({aliases})";
+                }
+                sortedCommand[yukoModule.ModuleName].Add(new string[] { fullNameCommand, command.Description });
             }
 
             foreach (var commandsEntry in sortedCommand)

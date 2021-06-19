@@ -97,7 +97,8 @@ namespace DFL_BotAndServer.Commands
             //}
         }
 
-        [Command("adm-access")]
+        [Command("admin.access")]
+        [Aliases("adm.acc")]
         [Description("Показывает каналы к которым у бота есть доступ")]
         public async Task Access(CommandContext commandContext)
         {
