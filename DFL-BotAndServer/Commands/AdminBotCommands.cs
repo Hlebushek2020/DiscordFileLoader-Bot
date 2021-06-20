@@ -21,7 +21,7 @@ namespace DFL_BotAndServer.Commands
         }
 
         [Command("access")]
-        [Description("Показывает каналы к которым у бота есть доступ")]
+        [Description("Каналы к которым у бота есть доступ")]
         public async Task Access(CommandContext commandContext)
         {
             await commandContext.RespondAsync(GeneralCommands.Access(commandContext));
