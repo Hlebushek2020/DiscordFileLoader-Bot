@@ -1,7 +1,10 @@
 # DIRECTORIES
 /DFL-BotAndServer/bin/*
 /DFL-BotAndServer/obj/*
+/DFL-BotAndServer \[v2.0\]/bin/*
+/DFL-BotAndServer \[v2.0\]/obj/*
 /DFL-Des-Client/VS_Output/*
+/DFL-Client \[v2.0\]/VS_Output/*
 /packages/*
 /.vs/*
 # FILES
