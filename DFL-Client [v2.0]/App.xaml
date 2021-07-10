@@ -1,4 +1,4 @@
-﻿<Application x:Class="DFL_Client__v2._0_.App"
+﻿<Application x:Class="DFL_Client.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:DFL_Client"

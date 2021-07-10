@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace DFL_Client__v2._0_
+namespace DFL_Client
 {
     /// <summary>
     /// Логика взаимодействия для App.xaml
